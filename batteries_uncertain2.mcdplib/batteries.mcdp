@@ -1,0 +1,12 @@
+
+choose(
+         LCO: (load Battery_LCO),
+        LiPo: (load Battery_LiPo),
+         LMO: (load Battery_LMO),
+        NiMH: (load Battery_NiMH),
+         LFP: (load Battery_LFP),
+        NiH2: (load Battery_NiH2),
+       NiCad: (load Battery_NiCad),
+         SLA: (load Battery_SLA)
+)
+    

@@ -1,0 +1,15 @@
+mcdp {
+    provides capacity [J]
+    requires mass [kg]
+    requires cost [EUR]   
+    
+    energy_density = 100 J/kg
+    cost_density = 100 EUR/J
+    required mass ≽ provided capacity / energy_density
+     
+    cost_materials = provided capacity · cost_density
+    cost_connectors = 1 EUR
+    
+    required cost ≽ cost_connectors + cost_materials
+  
+}

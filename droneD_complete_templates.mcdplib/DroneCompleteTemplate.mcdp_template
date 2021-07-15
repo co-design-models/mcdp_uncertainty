@@ -1,0 +1,36 @@
+template [
+    Battery: `BatteryInterface,
+    Actuation: `ActuationInterface,
+    Perception: `PerceptionInterface,
+    PowerApprox: `PowerApprox]
+mcdp {
+  provides travel_distance [km]
+  provides num_missions [dimensionless]
+  provides carry_payload [g]
+
+  requires total_cost_ownership [$]
+  requires total_mass [g]
+
+  strategy = instance `droneD_complete_v2.Strategy
+
+  actuation_energetics = instance specialize [
+      Battery: Battery,
+      Actuation: Actuation,
+      PowerApprox: PowerApprox
+    ] `ActuationEnergeticsTemplate
+
+  endurance provided by actuation_energetics >= endurance required by strategy
+  velocity  provided by actuation_energetics >= velocity required by strategy
+  num_missions  provided by actuation_energetics >= provided num_missions
+  extra_payload  provided by actuation_energetics  >= provided carry_payload
+  distance provided by strategy >= provided travel_distance
+
+  perception = instance Perception
+  velocity provided by perception >= velocity required by strategy
+
+  extra_power provided by actuation_energetics >=power required by perception
+
+  required total_mass >= total_mass required by actuation_energetics
+
+  required total_cost_ownership >=  total_cost required by actuation_energetics
+}

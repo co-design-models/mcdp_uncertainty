@@ -1,0 +1,12 @@
+mcdp {
+    requires total_cost [USD]
+    requires total_mass [kg]
+    provides capacity [J]
+        
+    battery1 = instance `battery_simplest
+    battery2 = instance `battery_simplest
+    
+    provided capacity ≼ (capacity provided by battery1) + (capacity provided by battery2)
+    required total_cost ≽ (cost required by battery1) + (cost required by battery2)
+    required total_mass ≽ (mass required by battery1) + (mass required by battery2)
+}
