@@ -20,7 +20,7 @@ mcdp {
     num_replacements = ceil(provided missions * cycles_inv)
     required maintenance >= num_replacements
 
-    # Cost is proportional to number of replacements
+    # Cost is proportional to number of replacements 
     costc = (provided capacity * specific_cost_inv) * num_replacements
 
     required cost >= costc
