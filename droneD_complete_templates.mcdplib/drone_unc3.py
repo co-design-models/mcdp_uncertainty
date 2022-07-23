@@ -27,7 +27,7 @@ def go(algo):
     librarian.find_libraries("../..")
     library = librarian.load_library("droneD_complete_templates")
     library.use_cache_dir("_cached/drone_unc3")
-    context = library._generate_context_with_hooks()
+    context = library.generate_context_with_hooks()
 
     res = {}
     res["n"] = [
@@ -188,7 +188,8 @@ def report(data):
         e = pylab.errorbar(num_valid, mean, yerr=err, color="black", linewidth=2, linestyle="None", **attrs)
         #         plotline: Line2D instance #         x, y plot markers and/or line
         #         caplines: list of error bar cap#         Line2D instances
-        #         barlinecols: list of         LineCollection instances for the horizontal and vertical error ranges.
+        #         barlinecols: list of         LineCollection instances for the horizontal and vertical
+        #         error ranges.
         e[0].set_clip_on(False)
         for b in e[1]:
             b.set_clip_on(False)

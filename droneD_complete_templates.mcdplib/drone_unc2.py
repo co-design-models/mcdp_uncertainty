@@ -74,7 +74,7 @@ def go():
     librarian.find_libraries("../..")
     library = librarian.load_library("droneD_complete_templates")
     library.use_cache_dir("_cached/drone_unc2")
-    context = library._generate_context_with_hooks()
+    context = library.generate_context_with_hooks()
 
     res = {}
     res["intervals"] = [0.001, 0.01, 0.1, 1.0, 5.0, 10.0, 50, 100.0, 250, 500, 1000]
@@ -243,7 +243,8 @@ def report(data):
         e = pylab.errorbar(intervals, mean, yerr=err, color="black", linewidth=2, linestyle="None", **attrs)
         #         plotline: Line2D instance #         x, y plot markers and/or line
         #         caplines: list of error bar cap#         Line2D instances
-        #         barlinecols: list of         LineCollection instances for the horizontal and vertical error ranges.
+        #         barlinecols: list of         LineCollection instances for the horizontal and vertical
+        #         error ranges.
         e[0].set_clip_on(False)
         for b in e[1]:
             b.set_clip_on(False)

@@ -3,7 +3,7 @@ from matplotlib import pylab
 
 from mcdp_dp import get_dp_bounds, InvMult2, InvPlus2
 from mcdp_lang.parse_interface import parse_poset
-from mcdp_posets import PosetProduct, UpperSets
+from mcdp_posets import PosetProduct2, UpperSets
 from mcdp_report.plotters.get_plotters_imp import get_best_plotter
 from plot_utils import ieee_fonts_zoom3, ieee_spines_zoom3
 from reprep import Report
@@ -36,7 +36,7 @@ def go1(r, ns, dp, plot_nominal, axis):
         f0 = 1.0
         R = dp.get_res_space()
         UR = UpperSets(R)
-        space = PosetProduct((UR, UR))
+        space = PosetProduct2(UR, UR)
 
         urL = dpL.solve(f0)
         urU = dpU.solve(f0)
