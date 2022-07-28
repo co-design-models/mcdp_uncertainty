@@ -12,7 +12,6 @@ from mcdp_dp import get_dp_bounds, Tracer
 from mcdp_ipython_utils.plotting import set_axis_colors
 from mcdp_lang import parse_ndp
 from mcdp_library import Librarian
-from mcdp_ndp import ModelBuildingContext
 from mcdp_posets import UpperSets
 from plot_utils import ieee_fonts_zoom3, ieee_spines_zoom3
 from quickapp import QuickApp
@@ -84,7 +83,9 @@ def go():
         ndp = parse_ndp(s, context=context)
 
         basename = ("drone_unc2_%02d_%s_mw" % (i, interval_mw)).replace(".", "_")
-        fn = os.path.join("generated", "drone_unc2", basename + ".mcdp")
+        # we are now much more strict with where we store the files
+        # fn = os.path.join("generated", "drone_unc2", basename + ".mcdp")
+        fn = basename + ".mcdp"
         dn = os.path.dirname(fn)
         if not os.path.exists(dn):
             os.makedirs(dn)
@@ -108,8 +109,7 @@ def solve_stats(ndp):
         "extra_payload": "100 g",
         "num_missions": "100 []",
     }
-    context = ModelBuildingContext()
-    f = convert_string_query(ndp=ndp, query=query, context=context)
+    f = convert_string_query(ndp=ndp, query=query)
 
     dp0 = ndp.get_dp()
     dpL, dpU = get_dp_bounds(dp0, nl=1, nu=1)

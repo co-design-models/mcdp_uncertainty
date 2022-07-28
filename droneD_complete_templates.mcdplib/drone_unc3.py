@@ -8,7 +8,8 @@ from mcdp_dp import get_dp_bounds, InvMult2, Tracer
 from mcdp_ipython_utils.plotting import set_axis_colors
 from mcdp_lang import parse_ndp
 from mcdp_library import Librarian
-from mcdp_ndp import CompositeNamedDP, ignore_some, ModelBuildingContext
+from mcdp_ndp import CompositeNamedDP, ignore_some
+from mcdp_lang import ModelBuildingContext
 from mcdp_posets import UpperSets
 from plot_utils import ieee_fonts_zoom3, ieee_spines_zoom3
 from quickapp import QuickApp

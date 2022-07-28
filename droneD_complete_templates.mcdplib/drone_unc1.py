@@ -134,10 +134,10 @@ class DroneU(QuickApp):
 
     async def define_jobs_context(self, sti, context):
         for l in ["batteries_uncertain1", "batteries_uncertain2", "batteries_uncertain3"]:
-            battery = "`%s.batteries" % l
+            battery = f"`{l}.batteries"
             s = get_ndp_code(battery)
 
-            fn = os.path.join("generated", "drone_unc1", "drone_unc1_%s.mcdp" % (l))
+            fn = f"drone_unc1_{l}.mcdp"
             dn = os.path.dirname(fn)
             if not os.path.exists(dn):
                 os.makedirs(dn)
