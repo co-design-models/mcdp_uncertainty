@@ -1,3 +1,5 @@
+outd=out-Makefile
+
 all: paper-figures
 
 clean:
@@ -47,30 +49,30 @@ depgraph:
 
 plot1:
 	#rm -rf out/plot_test1
-	mcdp-plot --cache -D ../../ -d . --out out/plot_test1 test1
+	mcdp-plot --cache -D ../../ -d . --out $(outd)/plot_test1 test1
 
 plot1f:
 	#rm -rf out/plot_test1
-	mcdp-plot --cache -D ../../ -d . --out out/plot_test1_flatten test1_flatten
+	mcdp-plot --cache -D ../../ -d . --out $(outd)/plot_test1_flatten test1_flatten
 
 #plot2:
 #	mcdp-plot --cache -D ../../ -d . --out out/plot_test1 --plots dp_graph_tree,dp_graph_flow test2
 
 plot3:
 	#mcdp-plot --cache -D ../../ -d . --out out/plot_test1 --plots dp_graph_tree,dp_graph_tree_compact test3
-	mcdp-plot --cache -D ../../ -d . --out out/plot_test1 --plots ndp_greenredsym test3
+	mcdp-plot --cache -D ../../ -d . --out $(outd)/plot_test1 --plots ndp_greenredsym test3
 
 plot4:
 
-	mcdp-plot --cache -D ../../ -d . --out out/plot_test4 --plots ndp_greenredsym test4
+	mcdp-plot --cache -D ../../ -d . --out $(outd)/plot_test4 --plots ndp_greenredsym test4
 
 solve3:
-	mcdp-solve --cache -D ../../ -d . --out out --upper 100 test3  '<5 km, 600 [], 100 g>'
+	mcdp-solve --cache -D ../../ -d . --out $(outd) --upper 100 test3  '<5 km, 600 [], 100 g>'
 
 
 solve2imp:
-	mcdp-solve --cache -D ../../ -d . --out out --upper 100 --imp test2   '<5 km, 600 [], 100 g>'
+	mcdp-solve --cache -D ../../ -d . --out $(outd) --upper 100 --imp test2   '<5 km, 600 [], 100 g>'
 
 
 solve3imp:
-	mcdp-solve --cache -D ../../ -d . --out out --upper 100 --imp --make test3    '<5 km, 600 [], 100 g>'
+	mcdp-solve --cache -D ../../ -d . --out $(outd) --upper 100 --imp --make test3    '<5 km, 600 [], 100 g>'
