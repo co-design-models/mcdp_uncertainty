@@ -4,9 +4,9 @@ import os
 
 import numpy as np
 
-from zuper_commons.logs import ZLogger
+from zuper_commons.logs import ZLogger, ZLoggerInterface
 
-logger = ZLogger(__name__)
+logger: ZLoggerInterface = ZLogger(__name__)
 from mcdp_cli.query_interpretation import convert_string_query
 from mcdp_dp import get_dp_bounds, Tracer
 from mcdp_ipython_utils.plotting import set_axis_colors

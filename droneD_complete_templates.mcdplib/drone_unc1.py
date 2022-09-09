@@ -7,9 +7,11 @@ import numpy as np
 from mcdp_ipython_utils.loading import solve_combinations, to_numpy_array
 from mcdp_ipython_utils.plotting import plot_all_directions, set_axis_colors
 from mcdp_library import Librarian
+from mcdp_library.library import lib_parse_ndp
 from plot_utils import ieee_fonts_zoom3, ieee_spines_zoom3
 from quickapp import QuickApp
 from reprep import Report
+from zuper_commons.text import LibraryName
 
 
 def get_ndp_code(battery):
@@ -34,10 +36,10 @@ specialize [
 def process(s):
     librarian = Librarian()
     librarian.find_libraries("../..")
-    library = librarian.load_library("droneD_complete_templates")
+    library = librarian.load_library(LibraryName("droneD_complete_templates"))
     library.use_cache_dir("_cached/drone_unc1")
 
-    ndp = library.parse_ndp(s)
+    ndp = lib_parse_ndp(library, s, __file__)
 
     combinations = {
         "endurance": (np.linspace(1, 1.5, 10), "hour"),
