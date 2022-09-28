@@ -142,7 +142,7 @@ class DroneU(QuickApp):
             fn = f"drone_unc1_{l}.mcdp"
             dn = os.path.dirname(fn)
             if not os.path.exists(dn):
-                os.makedirs(dn)
+                os.makedirs(dn, exist_ok=True)
             with open(fn, "w") as f:
                 f.write(s)
             print("Generated %s" % fn)
