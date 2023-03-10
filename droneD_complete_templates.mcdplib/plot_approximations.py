@@ -1,8 +1,8 @@
 import numpy as np
 from matplotlib import pylab
 
-from mcdp_dp import get_dp_bounds, InvMult2, InvPlus2
-from mcdp_lang.parse_interface import parse_poset
+from mcdp_dp import get_dp_bounds, InvMult2, InvPlus2, PrimitiveDPAny
+from mcdp_lang import parse_poset
 from mcdp_posets import PosetProduct2, UpperSets
 from mcdp_report.plotters.get_plotters_imp import get_best_plotter
 from plot_utils import ieee_fonts_zoom3, ieee_spines_zoom3
@@ -27,7 +27,7 @@ def plot_nominal_invplus(pylab):
     axes.yaxis.set_ticklabels([])
 
 
-def go1(r, ns, dp, plot_nominal, axis):
+def go1(r: Report, ns: list[int], dp: PrimitiveDPAny, plot_nominal, axis):
     f = r.figure(cols=len(ns))
 
     for n in ns:
@@ -38,8 +38,8 @@ def go1(r, ns, dp, plot_nominal, axis):
         UR = UpperSets(R)
         space = PosetProduct2(UR, UR)
 
-        urL = dpL.solve(f0)
-        urU = dpU.solve(f0)
+        urL = dpL.solve(f=f0)
+        urU = dpU.solve(f=f0)
         value = urL, urU
 
         plotter = get_best_plotter(space)
@@ -57,8 +57,8 @@ def go():
     r = Report()
     algos = [InvMult2.ALGO_UNIFORM, InvMult2.ALGO_VAN_DER_CORPUT]
     for algo in algos:
-        InvMult2.ALGO = algo
-        InvPlus2.ALGO = algo
+        # InvMult2.ALGO = algo
+        # InvPlus2.ALGO = algo
         print("Using algorithm %s " % algo)
         with r.subsection(algo) as r2:
             # first

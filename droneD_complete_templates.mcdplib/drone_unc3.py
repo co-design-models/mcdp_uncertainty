@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
-
+from typing import cast
 
 import numpy as np
 
-from mcdp_cli.query_interpretation import convert_string_query
+from mcdp import OutPortName
 from mcdp_dp import get_dp_bounds, InvMult2, Tracer
 from mcdp_ipython_utils.plotting import set_axis_colors
-from mcdp_lang import parse_ndp
+from mcdp_lang import convert_string_query, ModelBuildingContext, parse_ndp_
 from mcdp_library import Librarian
 from mcdp_ndp import CompositeNamedDP, ignore_some
-from mcdp_lang import ModelBuildingContext
 from mcdp_posets import UpperSets
 from plot_utils import ieee_fonts_zoom3, ieee_spines_zoom3
 from quickapp import QuickApp
 from reprep import Report
+from zuper_commons.text import LibraryName
 
 
 def create_ndp(context) -> CompositeNamedDP:
-    ndp = parse_ndp("`drone_unc3", context)
-    ndp = ignore_some(ndp, ignore_fnames=[], ignore_rnames=["total_cost_ownership"])
+    ndp = parse_ndp_("`drone_unc3", __name__, context)
+    ndp = ignore_some(ndp, ignore_fnames=[], ignore_rnames=[cast(OutPortName, "total_cost_ownership")])
 
     return ndp
 
@@ -26,7 +26,7 @@ def create_ndp(context) -> CompositeNamedDP:
 def go(algo):
     librarian = Librarian()
     librarian.find_libraries("../..")
-    library = librarian.load_library("droneD_complete_templates")
+    library = librarian.load_library(cast(LibraryName, "droneD_complete_templates"))
     library.use_cache_dir("_cached/drone_unc3")
     context = library.generate_context_with_hooks()
 
@@ -72,7 +72,7 @@ def solve_stats(ndp, n, algo):
     res = {}
     query = {"travel_distance": " 2 km", "carry_payload": "100 g", "num_missions": "100 []"}
     context = ModelBuildingContext()
-    f = convert_string_query(ndp=ndp, query=query, context=context)
+    f = convert_string_query(ndp=ndp, query=query)
 
     dp0 = ndp.get_dp()
     dpL, dpU = get_dp_bounds(dp0, nl=n, nu=n)
@@ -81,11 +81,11 @@ def solve_stats(ndp, n, algo):
     F.belongs(f)
 
     logger = None
-    InvMult2.ALGO = algo
+    # InvMult2.ALGO = algo
     traceL = Tracer(logger=logger)
-    resL = dpL.solve_trace(f, traceL)
+    resL = dpL.solve_trace(f=f, tracer=traceL)
     traceU = Tracer(logger=logger)
-    resU = dpU.solve_trace(f, traceU)
+    resU = dpU.solve_trace(f=f, tracer=traceU)
     R = dp0.get_res_space()
     UR = UpperSets(R)
     print("resultsL: %s" % UR.format(resL))

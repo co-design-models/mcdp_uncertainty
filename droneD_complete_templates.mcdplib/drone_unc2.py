@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 
 import os
+from typing import cast
 
 import numpy as np
 
-from zuper_commons.logs import ZLogger, ZLoggerInterface
-
-logger: ZLoggerInterface = ZLogger(__name__)
-from mcdp_cli.query_interpretation import convert_string_query
 from mcdp_dp import get_dp_bounds, Tracer
 from mcdp_ipython_utils.plotting import set_axis_colors
-from mcdp_lang import parse_ndp
+from mcdp_lang import convert_string_query, parse_ndp_
 from mcdp_library import Librarian
 from mcdp_posets import UpperSets
 from plot_utils import ieee_fonts_zoom3, ieee_spines_zoom3
 from quickapp import QuickApp
 from reprep import Report
+from zuper_commons.logs import ZLogger, ZLoggerInterface
+from zuper_commons.text import LibraryName
+
+logger: ZLoggerInterface = ZLogger(__name__)
 
 #
 # def create_power_approx(interval_mw, context):
@@ -71,7 +72,7 @@ ignore_resources(total_cost) specialize [
 def go():
     librarian = Librarian()
     librarian.find_libraries("../..")
-    library = librarian.load_library("droneD_complete_templates")
+    library = librarian.load_library(cast(LibraryName, "droneD_complete_templates"))
     library.use_cache_dir("_cached/drone_unc2")
     context = library.generate_context_with_hooks()
 
@@ -80,7 +81,7 @@ def go():
     res["results"] = []
     for i, interval_mw in enumerate(res["intervals"]):
         s = get_ndp_code(interval_mw=interval_mw)
-        ndp = parse_ndp(s, context=context)
+        ndp = parse_ndp_(s, __file__, context=context)
 
         basename = ("drone_unc2_%02d_%s_mw" % (i, interval_mw)).replace(".", "_")
         # we are now much more strict with where we store the files
@@ -118,9 +119,9 @@ def solve_stats(ndp):
     F.belongs(f)
 
     traceL = Tracer(logger=logger)
-    resL = dpL.solve_trace(f, traceL)
+    resL = dpL.solve_trace(f=f, tracer=traceL)
     traceU = Tracer(logger=logger)
-    resU = dpU.solve_trace(f, traceU)
+    resU = dpU.solve_trace(f=f, tracer=traceU)
     R = dp0.get_res_space()
     UR = UpperSets(R)
     print("resultsL: %s" % UR.format(resL))
