@@ -1,0 +1,42 @@
+version: 2.1
+parameters:
+  context_name:
+    type: string
+    default: << pipeline.git.branch >>
+workflows:
+  version: 2
+  test:
+    jobs:
+    - test:
+        context: << pipeline.parameters.context_name >>
+
+
+jobs:
+  test:
+    resource_class: co-design-models/r1
+    docker:
+    - image: ${DOCKER_REGISTRY}/${DOCKER_TARGET_ORG}/${DOCKER_REPO_PREFIX}zuper-mcdp-deploy:${Z_DISTRO}
+      auth:
+        username: $DOCKER_USERNAME
+        password: $DOCKER_PASSWORD
+    steps:
+
+    - checkout
+    - run:
+        name: Python stats
+        command: |
+          mkdir -p build-stats
+          pipdeptree >  build-stats/pipdeptree.txt
+          python3 -m pip list       | sort | tee  build-stats/pip-list.txt
+          python3 -m pip freeze     | sort | tee  build-stats/pip-freeze.txt
+          python3 -m pip cache list        | tee  build-stats/pip-cache.txt
+
+    - store_artifacts:
+        path: build-stats
+        destination: build-stats
+
+    - run:
+        name: run
+        # language=bash
+        command: |
+          mcdp-load-libraries 

@@ -1,0 +1,5 @@
+template mcdp {
+    provides distance [km]
+    requires endurance [s]
+    requires velocity [m/s]
+}

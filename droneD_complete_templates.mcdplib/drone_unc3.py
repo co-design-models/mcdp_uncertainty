@@ -1,107 +1,88 @@
 #!/usr/bin/env python3
+from dataclasses import dataclass
 from typing import cast
 
 import numpy as np
 
-from mcdp import OutPortName
-from mcdp_dp import get_dp_bounds, InvMult2, Tracer
-from mcdp_ipython_utils.plotting import set_axis_colors
-from mcdp_lang import convert_string_query, ModelBuildingContext, parse_ndp_
-from mcdp_library import Librarian
+from drone_unc2 import get_only_one
+from mcdp import OP
+from mcdp_dp import get_dp_bounds, Tracer
+from mcdp_ipython_utils import set_axis_colors
+from mcdp_lang import convert_string_query, MCDPLibraryInterface
+from mcdp_library import Librarian, MCDPLibrary
 from mcdp_ndp import CompositeNamedDP, ignore_some
-from mcdp_posets import UpperSets
+from mcdp_posets_algebra import ApproximationAlgorithms, ApproximationSettings
+from misc_utils import SolveStatsResults
 from plot_utils import ieee_fonts_zoom3, ieee_spines_zoom3
-from quickapp import QuickApp
+from quickapp import QuickApp, QuickAppContext
 from reprep import Report
-from zuper_commons.text import LibraryName
+from zuper_commons.text import LibraryName, ThingName
+from zuper_commons.types import ZValueError
+from zuper_params import DecentParams
+from zuper_utils_asyncio import SyncTaskInterface
 
 
-def create_ndp(context) -> CompositeNamedDP:
-    ndp = parse_ndp_("`drone_unc3", __name__, context)
-    ndp = ignore_some(ndp, ignore_fnames=[], ignore_rnames=[cast(OutPortName, "total_cost_ownership")])
+def create_ndp(library: MCDPLibraryInterface) -> CompositeNamedDP:
+    si, ndp = library.load_ndp(cast(ThingName, "drone_unc3")).split()
+    ndp = ignore_some(ndp, ignore_fnames=[], ignore_rnames=[OP("total_cost_ownership")])
 
     return ndp
 
 
-def go(algo):
+@dataclass
+class GoResult:
+    n: list[int]
+    results: "list[SolveStatsResults]"
+
+
+def go(algo: ApproximationAlgorithms) -> GoResult:
     librarian = Librarian()
     librarian.find_libraries("../..")
     library = librarian.load_library(cast(LibraryName, "droneD_complete_templates"))
+    assert isinstance(library, MCDPLibrary), type(library)
     library.use_cache_dir("_cached/drone_unc3")
-    context = library.generate_context_with_hooks()
+    ApproximationSettings.DEFAULT_ALGO = algo
 
-    res = {}
-    res["n"] = [
-        1,
-        5,
-        10,
-        15,
-        25,
-        50,
-        61,
-        75,
-        92,
-        100,
-        125,
-        150,
-        160,
-        175,
-        182,
-        200,
-        300,
-        400,
-        500,
-        600,
-        1000,
-        1500,
-    ]
+    ns = [1, 5, 10, 15, 25, 50, 61, 75, 92, 100, 125, 150, 160, 175, 182, 200, 300, 400, 500, 600, 1000, 1500]
 
     #     res['n'] = [1, 5, 10, 15, 25, 50, 61, 100]
     #     res['n'] = [3000]
-    res["results"] = []
-    for n in res["n"]:
-        ndp = create_ndp(context)
-        result = solve_stats(ndp=ndp, n=n, algo=algo)
-        result["ndp"] = ndp
-        res["results"].append(result)
+    results = []
+    for n in ns:
+        ndp = create_ndp(library)
+        result = solve_stats(ndp=ndp, n=n)
+        results.append(result)
 
-    return res
+    return GoResult(ns, results)
 
 
-def solve_stats(ndp, n, algo):
-    res = {}
+def solve_stats(ndp: CompositeNamedDP, n: int) -> SolveStatsResults:
     query = {"travel_distance": " 2 km", "carry_payload": "100 g", "num_missions": "100 []"}
-    context = ModelBuildingContext()
     f = convert_string_query(ndp=ndp, query=query)
 
     dp0 = ndp.get_dp()
     dpL, dpU = get_dp_bounds(dp0, nl=n, nu=n)
 
-    F = dp0.get_fun_space()
+    F = dp0.get_F()
     F.belongs(f)
 
     logger = None
     # InvMult2.ALGO = algo
     traceL = Tracer(logger=logger)
-    resL = dpL.solve_trace(f=f, tracer=traceL)
+    resL = dpL.solve_f_trace(f=f, tracer=traceL)
     traceU = Tracer(logger=logger)
-    resU = dpU.solve_trace(f=f, tracer=traceU)
-    R = dp0.get_res_space()
-    UR = UpperSets(R)
+    resU = dpU.solve_f_trace(f=f, tracer=traceU)
+    R = dp0.get_R()
+    UR = dp0.get_UR()
     print("resultsL: %s" % UR.format(resL))
     print("resultsU: %s" % UR.format(resU))
 
-    res["traceL"] = traceL
-    res["traceU"] = traceU
-    res["resL"] = resL
-    res["resU"] = resU
-    res["n"] = n
-    res["query"] = query
-
-    return res
+    return SolveStatsResults(
+        traceL=traceL, traceU=traceU, resL=resL, resU=resU, n=n, query=query, ndp=ndp, dpL=dpL, dpU=dpU
+    )
 
 
-def report(data):
+def report(data: GoResult) -> Report:
     print("report()")
     from matplotlib import pylab
 
@@ -109,22 +90,17 @@ def report(data):
 
     r = Report()
 
-    num = np.array(data["n"])
+    num = np.array(data.n)
     print(num)
 
     print("reading iterations")
-    num_iterations_L = [get_num_iterations(res_i["traceL"]) for res_i in data["results"]]
-    num_iterations_U = [get_num_iterations(res_i["traceU"]) for res_i in data["results"]]
+    num_iterations_L = [get_num_iterations(res_i.traceL) for res_i in data.results]
+    num_iterations_U = [get_num_iterations(res_i.traceU) for res_i in data.results]
 
-    def get_mass(res):
-        if not res.minimals:
-            return np.inf
-        return list(res.minimals)[0]
+    res_L = np.array([get_only_one(res_i.dpL.get_R(), res_i.resL) for res_i in data.results], dtype=float)
+    res_U = np.array([get_only_one(res_i.dpU.get_R(), res_i.resU) for res_i in data.results], dtype=float)
 
-    res_L = np.array([get_mass(res_i["resL"]) for res_i in data["results"]])
-    res_U = np.array([get_mass(res_i["resU"]) for res_i in data["results"]])
-
-    accuracy = np.array(res_U) - np.array(res_L)
+    accuracy = res_U - res_L
 
     num_iterations = np.array(num_iterations_L) + np.array(num_iterations_U)
 
@@ -218,20 +194,20 @@ def report(data):
     return r
 
 
-def get_num_iterations(trace):
-    v = list(trace.rec_get_value("iterations"))
+def get_num_iterations(tracer: Tracer) -> int:
+    v = list(tracer.rec_get_value("iterations"))
     if not isinstance(v, list) and len(v) == 1:
-        raise ValueError(v)
+        raise ZValueError(v=v)
     S = v[0]
-    return len(S)
+    return len(S)  # type: ignore
 
 
 class DroneUnc3(QuickApp):
-    def define_options(self, params):
+    def define_options(self, params: DecentParams) -> None:
         pass
 
-    async def define_jobs_context(self, sti, context):
-        for algo in [InvMult2.ALGO_VAN_DER_CORPUT, InvMult2.ALGO_UNIFORM]:
+    async def define_jobs_context(self, sti: SyncTaskInterface, context: QuickAppContext):
+        for algo in [ApproximationAlgorithms.VAN_DER_CORPUT, ApproximationAlgorithms.UNIFORM]:
             c2 = context.child(algo)
             result = c2.comp(go, algo=algo)
             r = c2.comp(report, result)

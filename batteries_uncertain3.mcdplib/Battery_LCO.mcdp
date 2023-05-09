@@ -10,8 +10,8 @@ mcdp {
 
     # Battery properties
     specific_energy_inv = Uncertain(1.0 []/ 243.75 Wh/kg, 1.0 [] /  146.25 Wh/kg)
-    specific_cost_inv = Uncertain(1.0 [] / 3.55 Wh/USD, 1.0 [] / 2.13 Wh/USD)
-    cycles_inv = Uncertain(1.0 []/937.5 [], 1.0[]/ 562.5 [])
+    specific_cost_inv = Uncertain(1.0 [] / 3.55 Wh/$, 1.0 [] / 2.13 Wh/$)
+    cycles_inv = Uncertain(1.0 []/937.5, 1.0[]/ 562.5)
 
     # Constraint between mass and capacity
     massc = provided capacity * specific_energy_inv

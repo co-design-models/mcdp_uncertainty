@@ -1,22 +1,27 @@
 #!/usr/bin/env python3
-
-import os
-from typing import cast
+from dataclasses import dataclass
+from typing import Optional, TypeVar
 
 import numpy as np
 
+from mcdp_ndp import CompositeNamedDP
+from zuper_commons.fs import make_sure_dir_exists
+from zuper_commons.logs import ZLogger
+from zuper_commons.text import LibraryName
+
+logger = ZLogger(__name__)
+from mcdp_lang import convert_string_query
 from mcdp_dp import get_dp_bounds, Tracer
-from mcdp_ipython_utils.plotting import set_axis_colors
-from mcdp_lang import convert_string_query, parse_ndp_
-from mcdp_library import Librarian
-from mcdp_posets import UpperSets
+from mcdp_ipython_utils import set_axis_colors
+from mcdp_library import Librarian, MCDPLibrary
+from mcdp_posets import PosetWithMath, UpperSet
 from plot_utils import ieee_fonts_zoom3, ieee_spines_zoom3
 from quickapp import QuickApp
 from reprep import Report
-from zuper_commons.logs import ZLogger, ZLoggerInterface
-from zuper_commons.text import LibraryName
+from zuper_commons.types import add_context, ZValueError
 
-logger: ZLoggerInterface = ZLogger(__name__)
+from misc_utils import SolveStatsResults
+
 
 #
 # def create_power_approx(interval_mw, context):
@@ -32,7 +37,6 @@ logger: ZLoggerInterface = ZLogger(__name__)
 #     ndp = parse_ndp(s, context)
 #
 #     return ndp
-from zuper_commons.types import ZValueError
 
 
 def get_ndp_code(interval_mw: float):
@@ -40,8 +44,8 @@ def get_ndp_code(interval_mw: float):
         # language=mcdp
         """\
 ignore_resources(total_cost) specialize [
-  Battery: `batteries_nodisc.batteries, 
-  Actuation: `droneD_complete_v2.Actuation, 
+  Battery: `batteries_nodisc.batteries,
+  Actuation: `droneD_complete_v2.Actuation,
   PowerApprox: mcdp {
     provides power [W]
     requires power [W]
@@ -69,40 +73,40 @@ ignore_resources(total_cost) specialize [
 #     return ndp
 
 
-def go():
+@dataclass
+class DroneUnc2Result:
+    intervals: list[float]
+    results: list[SolveStatsResults]
+
+
+def drone_unc2_go() -> DroneUnc2Result:
     librarian = Librarian()
     librarian.find_libraries("../..")
-    library = librarian.load_library(cast(LibraryName, "droneD_complete_templates"))
+    library = librarian.load_library(LibraryName("droneD_complete_templates"))
+    assert isinstance(library, MCDPLibrary), library
     library.use_cache_dir("_cached/drone_unc2")
-    context = library.generate_context_with_hooks()
 
-    res = {}
-    res["intervals"] = [0.001, 0.01, 0.1, 1.0, 5.0, 10.0, 50, 100.0, 250, 500, 1000]
-    res["results"] = []
-    for i, interval_mw in enumerate(res["intervals"]):
+    intervals = [0.001, 0.01, 0.1, 1.0, 5.0, 10.0, 50, 100.0, 250, 500, 1000]
+    results = []
+    for i, interval_mw in enumerate(intervals):
         s = get_ndp_code(interval_mw=interval_mw)
-        ndp = parse_ndp_(s, __file__, context=context)
+        si, ndp = library.interpret_ndp(s).split()
 
         basename = ("drone_unc2_%02d_%s_mw" % (i, interval_mw)).replace(".", "_")
-        # we are now much more strict with where we store the files
-        # fn = os.path.join("generated", "drone_unc2", basename + ".mcdp")
         fn = basename + ".mcdp"
-        dn = os.path.dirname(fn)
-        if not os.path.exists(dn):
-            os.makedirs(dn, exist_ok=True)
+        make_sure_dir_exists(fn)
+
         with open(fn, "w") as f:
             f.write(s)
         print("Generated %s" % fn)
 
-        result = solve_stats(ndp)
-        result["ndp"] = ndp
-        res["results"].append(result)
+        result = solve_stats(ndp, 1)
+        results.append(result)
 
-    return res
+    return DroneUnc2Result(intervals=intervals, results=results)
 
 
-def solve_stats(ndp):
-    res = {}
+def solve_stats(ndp: CompositeNamedDP, n: int) -> SolveStatsResults:
     query = {
         "endurance": "1.5 hour",
         "velocity": "1 m/s",
@@ -113,49 +117,60 @@ def solve_stats(ndp):
     f = convert_string_query(ndp=ndp, query=query)
 
     dp0 = ndp.get_dp()
-    dpL, dpU = get_dp_bounds(dp0, nl=1, nu=1)
+    dpL, dpU = get_dp_bounds(dp0, nl=n, nu=n)
 
-    F = dp0.get_fun_space()
+    F = dp0.get_F()
     F.belongs(f)
 
     traceL = Tracer(logger=logger)
-    resL = dpL.solve_trace(f=f, tracer=traceL)
+    resL = dpL.solve_f_trace(f=f, tracer=traceL)
     traceU = Tracer(logger=logger)
-    resU = dpU.solve_trace(f=f, tracer=traceU)
-    R = dp0.get_res_space()
-    UR = UpperSets(R)
+    resU = dpU.solve_f_trace(f=f, tracer=traceU)
+    R = dp0.get_R()
+    UR = dp0.get_UR()
     print("resultsL: %s" % UR.format(resL))
     print("resultsU: %s" % UR.format(resU))
+    #
+    # res["traceL"] = traceL
+    # res["traceU"] = traceU
+    # res["resL"] = resL
+    # res["resU"] = resU
+    # res["nsteps"] = 100
 
-    res["traceL"] = traceL
-    res["traceU"] = traceU
-    res["resL"] = resL
-    res["resU"] = resU
-    res["nsteps"] = 100
-
-    return res
+    return SolveStatsResults(
+        traceL=traceL, traceU=traceU, resL=resL, resU=resU, n=n, query=query, ndp=ndp, dpL=dpL, dpU=dpU
+    )
 
 
-def report(data):
+X = TypeVar("X")
+
+
+def get_only_one(P: PosetWithMath[X], w: UpperSet[X]) -> Optional[X]:
+    if not w.minimals:
+        return None
+    el = list(w.minimals)[0]
+
+    _, v0, _, _ = P.to_interval2(el)
+    return float(v0)  # FIXME: 1 can be infinite
+
+
+def drone_unc2_report(data: DroneUnc2Result) -> Report:
     from matplotlib import pylab
 
     ieee_fonts_zoom3(pylab)
     r = Report()
 
-    print("reading iterations")
-    num_iterations_L = [get_num_iterations(res_i["traceL"]) for res_i in data["results"]]
-    num_iterations_U = [get_num_iterations(res_i["traceU"]) for res_i in data["results"]]
+    logger.info("reading iterations")
+    num_iterations_L = [get_num_iterations(res_i.traceL) for res_i in data.results]
+    num_iterations_U = [get_num_iterations(res_i.traceU) for res_i in data.results]
 
-    def get_mass(res):
-        if not res.minimals:
-            return None
-        return list(res.minimals)[0]
-
-    res_L = np.array([get_mass(res_i["resL"]) for res_i in data["results"]])
-    res_U = np.array([get_mass(res_i["resU"]) for res_i in data["results"]])
+    with add_context(data=data):
+        res_L = np.array([get_only_one(res_i.dpL.get_R(), res_i.resL) for res_i in data.results], dtype=float)
+        res_U = np.array([get_only_one(res_i.dpU.get_R(), res_i.resU) for res_i in data.results], dtype=float)
 
     accuracy = np.array(res_U) - np.array(res_L)
 
+    logger.debug(res_U=res_U, res_L=res_L, accuracy=accuracy)
     num_iterations = np.array(num_iterations_L) + np.array(num_iterations_U)
 
     print(res_L)
@@ -163,7 +178,7 @@ def report(data):
     print(num_iterations_L)
     print(num_iterations_U)
 
-    intervals = data["intervals"]
+    intervals = np.array(data.intervals, dtype=float)
 
     print("Plotting")
     f = r.figure("fig1", cols=2)
@@ -235,28 +250,6 @@ def report(data):
         pylab.ylabel("total mass [g]")
         set_axis_colors(pylab, color_tolerance, color_resources)
 
-    with f.plot("mass2", **fig) as pylab:
-        ieee_spines_zoom3(pylab)
-
-        mean = np.array(res_L) * 0.5 + np.array(res_U) * 0.5
-        err = (res_U - res_L) / 2
-
-        e = pylab.errorbar(intervals, mean, yerr=err, color="black", linewidth=2, linestyle="None", **attrs)
-        #         plotline: Line2D instance #         x, y plot markers and/or line
-        #         caplines: list of error bar cap#         Line2D instances
-        #         barlinecols: list of         LineCollection instances for the horizontal and vertical
-        #         error ranges.
-        e[0].set_clip_on(False)
-        for b in e[1]:
-            b.set_clip_on(False)
-        for b in e[2]:
-            b.set_clip_on(False)
-            b.set_linewidth(2)
-
-        pylab.xlabel(label_tolerance)
-        pylab.ylabel("total mass [g]")
-        set_axis_colors(pylab, color_tolerance, color_resources)
-
     with f.plot("mass2_log", **fig) as pylab:
         ieee_spines_zoom3(pylab)
         pylab.loglog(intervals, res_L, LOWER, **attrs)
@@ -277,10 +270,32 @@ def report(data):
         pylab.ylabel("iterations")
         pylab.xlabel("solution uncertainty [g]")
 
+    with f.plot("mass2", **fig) as pylab:
+        ieee_spines_zoom3(pylab)
+
+        mean = res_L * 0.5 + res_U * 0.5
+        err = (res_U - res_L) / 2
+
+        e = pylab.errorbar(intervals, mean, yerr=err, color="black", linewidth=2, linestyle="None", **attrs)
+        #         plotline: Line2D instance #         x, y plot markers and/or line
+        #         caplines: list of error bar cap#         Line2D instances
+        #         barlinecols: list of         LineCollection instances for the horizontal and vertical
+        #         error ranges.
+        e[0].set_clip_on(False)
+        for b in e[1]:
+            b.set_clip_on(False)
+        for b in e[2]:
+            b.set_clip_on(False)
+            b.set_linewidth(2)
+
+        pylab.xlabel(label_tolerance)
+        pylab.ylabel("total mass [g]")
+        set_axis_colors(pylab, color_tolerance, color_resources)
+
     return r
 
 
-def get_num_iterations(trace):
+def get_num_iterations(trace: Tracer) -> int:
     loops = list(trace.find_loops())
     if len(loops) != 1:
         msg = "I expected to find only one loop."
@@ -290,7 +305,7 @@ def get_num_iterations(trace):
 
     # list of KleeneIteration
     iterations = loop.get_value1("iterations")
-    return len(iterations)
+    return len(iterations)  # type: ignore
 
 
 class DroneUnc2(QuickApp):
@@ -298,8 +313,8 @@ class DroneUnc2(QuickApp):
         pass
 
     async def define_jobs_context(self, sti, context):
-        result = context.comp(go)
-        r = context.comp(report, result)
+        result = context.comp(drone_unc2_go)
+        r = context.comp(drone_unc2_report, result)
         context.add_report(r, "report")
 
 

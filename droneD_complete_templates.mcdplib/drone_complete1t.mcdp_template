@@ -1,5 +1,9 @@
-template [Battery: `BatteryInterface, Actuation: `ActuationInterface, Perception: `PerceptionInterface]
-
+template [
+    Battery: `BatteryInterface,
+    Actuation: `ActuationInterface,
+    Perception: `PerceptionInterface,
+    Strategy: `StrategyInterface
+]
 mcdp {
     provides travel_distance [km]
     provides num_missions [dimensionless]
@@ -7,9 +11,10 @@ mcdp {
 
     requires total_cost_ownership [$]
 
-    strategy = instance `Strategy
+    strategy = instance Strategy
 
-    actuation_energetics = instance specialize [Battery: Battery, Actuation: Actuation] `ActuationEnergeticsTemplate
+    actuation_energetics = instance specialize [Battery: Battery, Actuation: Actuation,
+    PowerApprox: `PowerApprox] `ActuationEnergeticsTemplate
 
     endurance provided by actuation_energetics>= endurance required by strategy
     velocity provided by actuation_energetics>= velocity required by strategy

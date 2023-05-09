@@ -1,25 +1,34 @@
 #!/usr/bin/env python3
 
-import os
+from dataclasses import dataclass
+from decimal import Decimal
+from typing import Any, cast, Iterator
 
 import numpy as np
 
-from mcdp_ipython_utils.loading import solve_combinations, to_numpy_array
-from mcdp_ipython_utils.plotting import plot_all_directions, set_axis_colors
-from mcdp_library import Librarian
-from mcdp_library.library import lib_parse_ndp
+from mcdp_ipython_utils import (
+    plot_all_directions,
+    set_axis_colors,
+    solve_combinations,
+    SolveQueriesResult,
+    SolveQueryMultiple,
+    to_numpy_array,
+)
+from mcdp_library import Librarian, MCDPLibrary
+from mcdp_posets_algebra import frac_linspace
 from plot_utils import ieee_fonts_zoom3, ieee_spines_zoom3
 from quickapp import QuickApp
 from reprep import Report
+from zuper_commons.fs import make_sure_dir_exists
 from zuper_commons.text import LibraryName
 
 
-def get_ndp_code(battery):
+def get_ndp_code(battery: str) -> str:
     s = (
         """\
 specialize [
-  Battery: %s, 
-  Actuation: `droneD_complete_v2.Actuation, 
+  Battery: %s,
+  Actuation: `droneD_complete_v2.Actuation,
   PowerApprox: mcdp {
     provides power [W]
     requires power [W]
@@ -33,51 +42,57 @@ specialize [
     return s
 
 
-def process(s):
+@dataclass
+class ProcessResult:
+    dataL: SolveQueriesResult[Any]
+    dataU: SolveQueriesResult[Any]
+
+
+def drone_unc1_process(s: str) -> ProcessResult:
     librarian = Librarian()
     librarian.find_libraries("../..")
-    library = librarian.load_library(LibraryName("droneD_complete_templates"))
+    library = librarian.load_library(cast(LibraryName, "droneD_complete_templates"))
+    assert isinstance(library, MCDPLibrary), library
     library.use_cache_dir("_cached/drone_unc1")
 
-    ndp = lib_parse_ndp(library, s, __file__)
+    si, ndp = library.interpret_ndp(s).split()
 
-    combinations = {
-        "endurance": (np.linspace(1, 1.5, 10), "hour"),
+    combinations0 = {
+        "endurance": (frac_linspace(1, Decimal("1.5"), 10), "hour"),
         "extra_payload": (100, "g"),
         "num_missions": (1000, "[]"),
-        "velocity": (1.0, "m/s"),
-        "extra_power": (0.5, "W"),
+        "velocity": (1, "m/s"),
+        "extra_power": (Decimal("0.5"), "W"),
     }
+    combinations = SolveQueryMultiple(combinations0)
 
     result_like = dict(total_cost="USD", total_mass="kg")
 
     dataU = solve_combinations(ndp, combinations, result_like, upper=1, lower=None)
     dataL = solve_combinations(ndp, combinations, result_like, upper=None, lower=1)
 
-    return dict(dataL=dataL, dataU=dataU)
+    return ProcessResult(dataL=dataL, dataU=dataU)
 
 
-def report(res):
+def get_value(data: SolveQueriesResult[Any], field: str) -> Iterator[float]:
+    for res in data.results:
+        a = to_numpy_array({field: "kg"}, res)
+
+        if len(a):
+            a = min(a[field])
+        else:
+            a = None
+        yield a
+
+
+def drone_unc1_report(pr: ProcessResult) -> Report:
     r = Report()
 
-    dataL = res["dataL"]
-    dataU = res["dataU"]
+    dataL = pr.dataL
+    dataU = pr.dataU
 
-    what_to_plot_res = dict(total_cost="USD", total_mass="kg")
-    what_to_plot_fun = dict(endurance="hour", extra_payload="g")
-
-    queries = dataL["queries"]
-    endurance = [q["endurance"] for q in queries]
-
-    def get_value(data, field):
-        for res in data["results"]:
-            a = to_numpy_array({field: "kg"}, res)
-
-            if len(a):
-                a = min(a[field])
-            else:
-                a = None
-            yield a
+    queries = dataL.queries
+    endurance = [q.q["endurance"] for q in queries]
 
     from matplotlib import pylab
 
@@ -107,27 +122,31 @@ def report(res):
 
     return r
 
-    print("Plotting lower")
-    with r.subsection("lower") as rL:
-        plot_all_directions(
-            rL,
-            queries=dataL["queries"],
-            results=dataL["results"],
-            what_to_plot_res=what_to_plot_res,
-            what_to_plot_fun=what_to_plot_fun,
-        )
+    if False:
+        what_to_plot_res = dict(total_cost="USD", total_mass="kg")
+        what_to_plot_fun = dict(endurance="hour", extra_payload="g")
 
-    print("Plotting upper")
-    with r.subsection("upper") as rU:
-        plot_all_directions(
-            rU,
-            queries=dataU["queries"],
-            results=dataU["results"],
-            what_to_plot_res=what_to_plot_res,
-            what_to_plot_fun=what_to_plot_fun,
-        )
+        print("Plotting lower")
+        with r.subsection("lower") as rL:
+            plot_all_directions(
+                rL,
+                queries=dataL.queries,
+                results=dataL.results,
+                what_to_plot_res=what_to_plot_res,
+                what_to_plot_fun=what_to_plot_fun,
+            )
 
-    return r
+        print("Plotting upper")
+        with r.subsection("upper") as rU:
+            plot_all_directions(
+                rU,
+                queries=dataU["queries"],
+                results=dataU["results"],
+                what_to_plot_res=what_to_plot_res,
+                what_to_plot_fun=what_to_plot_fun,
+            )
+
+        return r
 
 
 class DroneU(QuickApp):
@@ -136,19 +155,18 @@ class DroneU(QuickApp):
 
     async def define_jobs_context(self, sti, context):
         for l in ["batteries_uncertain1", "batteries_uncertain2", "batteries_uncertain3"]:
-            battery = f"`{l}.batteries"
+            battery = "`%s.batteries" % l
             s = get_ndp_code(battery)
 
             fn = f"drone_unc1_{l}.mcdp"
-            dn = os.path.dirname(fn)
-            if not os.path.exists(dn):
-                os.makedirs(dn, exist_ok=True)
+            make_sure_dir_exists(fn)
+
             with open(fn, "w") as f:
                 f.write(s)
             print("Generated %s" % fn)
 
-            result = context.comp(process, s)
-            r = context.comp(report, result)
+            result = context.comp(drone_unc1_process, s)
+            r = context.comp(drone_unc1_report, result)
             context.add_report(r, "report", l=l)
 
 

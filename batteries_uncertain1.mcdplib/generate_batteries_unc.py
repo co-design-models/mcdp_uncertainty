@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 
 import string
+from decimal import Decimal
+
+from mcdp_posets import PosetWithMath
+from zuper_commons.types import add_context, check_isinstance, ZValueError
 
 template = """\
 mcdp {
@@ -74,29 +78,34 @@ types = {
 from mcdp_lang import parse_constant
 
 
-def enlarge(value_string, alpha):
+def enlarge(value_string: str, alpha: Decimal):
     c = parse_constant(value_string)
+    c_unit = check_isinstance(c.unit, PosetWithMath)
+    with add_context(c=c):
+        _, value, _, _ = c_unit.to_interval2(c.value)
 
-    l = c.value * (1 - alpha)
-    u = c.value * (1 + alpha)
+        # value = c_unit.to_interval(c.value)[0]
 
-    ls = c.unit.format(l)
-    us = c.unit.format(u)
+        l = c_unit.from_number_lower(value * (1 - alpha))
+        u = c_unit.from_number_upper(value * (1 + alpha))
 
-    if "[]" in value_string:
-        ls = "%s []" % l
-        us = "%s []" % u
-    return ls, us
+        ls = c.unit.format(l)
+        us = c.unit.format(u)
+
+        # if "[]" in value_string:
+        #     ls = "%s []" % l
+        #     us = "%s []" % u
+        return ls, us
 
 
-def go(alpha):
+def go(alpha: Decimal):
     summary = ""
 
     good = []
     discarded = []
     for name, v in types.items():
         if not v["specific_cost"]:
-            print("skipping %s because no specific cost" % name)
+            # print("skipping %s because no specific cost" % name)
             discarded.append(name)
             continue
 
@@ -120,7 +129,7 @@ def go(alpha):
 
         print(s2)
         # ndp = parse_ndp(s2)
-        model_name = "Battery_%s" % name
+        model_name = f"Battery_{name}"
         fname = model_name + ".mcdp"
         with open(fname, "w") as f:
             f.write(s2)
@@ -151,9 +160,14 @@ choose(
 
 import sys
 
-if __name__ == "__main__":
-    alpha = float(sys.argv[1])
+
+def go0():
+    alpha = Decimal(sys.argv[1])
     if not alpha > 0:
-        raise ValueError(sys.argv[1])
+        raise ZValueError(arg=sys.argv[1])
     print("alpha: %s" % alpha)
     go(alpha)
+
+
+if __name__ == "__main__":
+    go0()

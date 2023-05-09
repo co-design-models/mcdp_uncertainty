@@ -1,28 +1,28 @@
 import numpy as np
-from matplotlib import pylab
+from matplotlib import pylab as pylab0
 
-from mcdp_dp import get_dp_bounds, InvMult2, InvPlus2, PrimitiveDPAny
-from mcdp_lang import parse_poset
-from mcdp_posets import PosetProduct2, UpperSets
-from mcdp_report.plotters.get_plotters_imp import get_best_plotter
+from mcdp_dp import get_dp_bounds, M_Fun_AddMany_DP, M_Fun_MultiplyMany_DP, PrimitiveDPAny
+from mcdp_posets import get_math_bundle, make_poset_product2
+from mcdp_posets_algebra import ApproximationAlgorithms
+from mcdp_report import get_best_plotter
 from plot_utils import ieee_fonts_zoom3, ieee_spines_zoom3
 from reprep import Report
 
 
-def plot_nominal_invmult(pylab):
+def plot_nominal_invmult(plt):
     nomimal_x = np.linspace(0.1, 10, 100)
     nomimal_y = 1.0 / nomimal_x
-    pylab.plot(nomimal_x, nomimal_y, "k-")
-    axes = pylab.gca()
+    plt.plot(nomimal_x, nomimal_y, "k-")
+    axes = plt.gca()
     axes.xaxis.set_ticklabels([])
     axes.yaxis.set_ticklabels([])
 
 
-def plot_nominal_invplus(pylab):
+def plot_nominal_invplus(plt):
     nomimal_x = np.linspace(0, 1.0, 100)
     nomimal_y = 1.0 - nomimal_x
-    pylab.plot(nomimal_x, nomimal_y, "k-")
-    axes = pylab.gca()
+    plt.plot(nomimal_x, nomimal_y, "k-")
+    axes = plt.gca()
     axes.xaxis.set_ticklabels([])
     axes.yaxis.set_ticklabels([])
 
@@ -33,13 +33,13 @@ def go1(r: Report, ns: list[int], dp: PrimitiveDPAny, plot_nominal, axis):
     for n in ns:
         dpL, dpU = get_dp_bounds(dp, n, n)
 
-        f0 = 1.0
-        R = dp.get_res_space()
-        UR = UpperSets(R)
-        space = PosetProduct2(UR, UR)
+        f0 = 1
 
-        urL = dpL.solve(f=f0)
-        urU = dpU.solve(f=f0)
+        UR = dp.get_UR()
+        space = make_poset_product2(UR, UR)
+
+        urL = dpL.solve_friendly(f=f0)
+        urU = dpU.solve_friendly(f=f0)
         value = urL, urU
 
         plotter = get_best_plotter(space)
@@ -51,20 +51,22 @@ def go1(r: Report, ns: list[int], dp: PrimitiveDPAny, plot_nominal, axis):
             pylab.axis(axis)
 
 
-def go():
-    ieee_fonts_zoom3(pylab)
+def go() -> None:
+    ieee_fonts_zoom3(pylab0)
 
     r = Report()
-    algos = [InvMult2.ALGO_UNIFORM, InvMult2.ALGO_VAN_DER_CORPUT]
+    algos = [ApproximationAlgorithms.UNIFORM, ApproximationAlgorithms.VAN_DER_CORPUT]
     for algo in algos:
         # InvMult2.ALGO = algo
         # InvPlus2.ALGO = algo
         print("Using algorithm %s " % algo)
         with r.subsection(algo) as r2:
             # first
-            F = parse_poset("dimensionless")
+            # F = parse_poset("dimensionless")
+            mb = get_math_bundle()
+            F = opspace = mb.get_non_neg_reals()
             R = F
-            dp = InvMult2(F, (R, R))
+            dp = M_Fun_MultiplyMany_DP(F=F, opspace=opspace, Rs=(R, R), algo=algo)
             ns = [3, 4, 5, 6, 10, 15]
 
             axis = (0.0, 6.0, 0.0, 6.0)
@@ -74,7 +76,7 @@ def go():
 
             # second
             axis = (0.0, 1.2, 0.0, 1.2)
-            dp = InvPlus2(F, (R, R))
+            dp = M_Fun_AddMany_DP(F=F, Rs=(R, R), opspace=opspace, algo=algo)
             with r2.subsection("invplus2") as rr:
                 go1(rr, ns, dp, plot_nominal_invplus, axis)
 

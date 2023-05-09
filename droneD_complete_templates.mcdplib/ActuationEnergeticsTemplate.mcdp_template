@@ -1,7 +1,7 @@
 template [
   Battery: `BatteryInterface,
   Actuation: `ActuationInterface,
-  PowerApprox: `PowerApprox
+  PowerApprox: `PowerApproxInterface
 ] mcdp {
   provides endurance     [s]
   provides extra_payload [kg]

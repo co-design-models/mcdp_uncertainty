@@ -1,5 +1,5 @@
 mcdp {
-    battery = instance `Batteries
+    battery = instance `batteries
 
     provides capacity, missions using battery
 
