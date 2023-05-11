@@ -47,7 +47,7 @@ jobs:
         name: run
         # language=bash
         command: |
-          tee .compmake.rc <<END
+          tee .compmake.rc \<<END
             config job_timeout 120
             config interactive 0
             config colorize 1
