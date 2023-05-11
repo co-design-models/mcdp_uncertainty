@@ -33,7 +33,7 @@ jobs:
           python3 -m pip freeze     | sort | tee  build-stats/pip-freeze.txt
           python3 -m pip cache list        | tee  build-stats/pip-cache.txt
 
-          mkdir -p build-stats/jobs/${CIRCLE_JOB}
+          mkdir -p build-stats/jobs/${CIRCLE_JOB}/envs
           echo -n "${Z_REQS_SHA:-not-present}"    > build-stats/jobs/${CIRCLE_JOB}/envs/Z_REQS_SHA
           echo -n "${IMAGE_VCS_SHA:-not-present}" > build-stats/jobs/${CIRCLE_JOB}/envs/IMAGE_VCS_SHA
           echo -n "${IMAGE_NAME:-not-present}"    > build-stats/jobs/${CIRCLE_JOB}/envs/IMAGE_NAME
