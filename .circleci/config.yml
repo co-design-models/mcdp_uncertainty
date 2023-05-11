@@ -57,7 +57,7 @@ jobs:
             config console_status 1
             config console_status_delta 20
             config manager_wait 0.005 
-            config multiprocessing_context spawn
+            config multiprocessing_strategy spawn
           END
           mcdp-load-libraries -o out  -c "-rparmake n=4" || true 
           compmake out/compmake -c "ls; stats; details failed; why failed"
