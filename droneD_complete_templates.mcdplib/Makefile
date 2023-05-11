@@ -16,14 +16,16 @@ paper-figures: paper-approxs paper-unc1 paper-unc2 paper-unc3
 paper-approxs:
 	python3 plot_approximations.py
 
+autogen: paper-unc1 paper-unc2 paper-unc3
+
 paper-unc1:
-	DISABLE_CONTRACTS=1 python drone_unc1.py -c parmake
+	DISABLE_CONTRACTS=1 python drone_unc1.py -c rparmake
 
 paper-unc2:
-	DISABLE_CONTRACTS=1 python drone_unc2.py -c parmake
+	DISABLE_CONTRACTS=1 python drone_unc2.py -c rparmake
 
 paper-unc3:
-	DISABLE_CONTRACTS=1 python drone_unc3.py -c parmake
+	DISABLE_CONTRACTS=1 python drone_unc3.py -c rparmake
 
 used = \
 	drone_unc1_batteries_uncertain1 \

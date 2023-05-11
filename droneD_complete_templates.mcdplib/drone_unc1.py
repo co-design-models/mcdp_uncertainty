@@ -26,6 +26,7 @@ from zuper_commons.text import LibraryName
 def get_ndp_code(battery: str) -> str:
     s = (
         """\
+from shelf "github.com/co-design-models/uav_energetics" import library droneD_complete_v2
 specialize [
   Battery: %s,
   Actuation: `droneD_complete_v2.Actuation,

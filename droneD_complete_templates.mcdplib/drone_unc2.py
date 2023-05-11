@@ -8,6 +8,8 @@ from mcdp_ndp import CompositeNamedDP
 from zuper_commons.fs import make_sure_dir_exists
 from zuper_commons.logs import ZLogger
 from zuper_commons.text import LibraryName
+from zuper_params import DecentParams
+from zuper_utils_asyncio import SyncTaskInterface
 
 logger = ZLogger(__name__)
 from mcdp_lang import convert_string_query
@@ -16,7 +18,7 @@ from mcdp_ipython_utils import set_axis_colors
 from mcdp_library import Librarian, MCDPLibrary
 from mcdp_posets import PosetWithMath, UpperSet
 from plot_utils import ieee_fonts_zoom3, ieee_spines_zoom3
-from quickapp import QuickApp
+from quickapp import QuickApp, QuickAppContext
 from reprep import Report
 from zuper_commons.types import add_context, ZValueError
 
@@ -43,6 +45,9 @@ def get_ndp_code(interval_mw: float):
     s = (
         # language=mcdp
         """\
+from shelf "github.com/co-design-models/uav_energetics" import library droneD_complete_v2
+from shelf "github.com/co-design-models/uav_energetics" import library batteries_nodisc
+ 
 ignore_resources(total_cost) specialize [
   Battery: `batteries_nodisc.batteries,
   Actuation: `droneD_complete_v2.Actuation,
@@ -126,7 +131,7 @@ def solve_stats(ndp: CompositeNamedDP, n: int) -> SolveStatsResults:
     resL = dpL.solve_f_trace(f=f, tracer=traceL)
     traceU = Tracer(logger=logger)
     resU = dpU.solve_f_trace(f=f, tracer=traceU)
-    R = dp0.get_R()
+    # R = dp0.get_R()
     UR = dp0.get_UR()
     print("resultsL: %s" % UR.format(resL))
     print("resultsU: %s" % UR.format(resU))
@@ -309,10 +314,10 @@ def get_num_iterations(trace: Tracer) -> int:
 
 
 class DroneUnc2(QuickApp):
-    def define_options(self, params):
+    def define_options(self, params: DecentParams) -> None:
         pass
 
-    async def define_jobs_context(self, sti, context):
+    async def define_jobs_context(self, sti: SyncTaskInterface, context: QuickAppContext) -> None:
         result = context.comp(drone_unc2_go)
         r = context.comp(drone_unc2_report, result)
         context.add_report(r, "report")

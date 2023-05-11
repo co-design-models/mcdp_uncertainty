@@ -1,5 +1,9 @@
-all:
+all: autogen
+
+
+autogen:
 	../batteries_uncertain1.mcdplib/generate_batteries_unc.py 0.25
+
 
 
 clean:

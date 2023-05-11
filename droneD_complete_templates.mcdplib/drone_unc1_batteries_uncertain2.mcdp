@@ -1,6 +1,7 @@
+from shelf "github.com/co-design-models/uav_energetics" import library droneD_complete_v2
 specialize [
-  Battery: `batteries_uncertain2.batteries, 
-  Actuation: `droneD_complete_v2.Actuation, 
+  Battery: `batteries_uncertain2.batteries,
+  Actuation: `droneD_complete_v2.Actuation,
   PowerApprox: mcdp {
     provides power [W]
     requires power [W]
