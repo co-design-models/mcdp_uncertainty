@@ -13,6 +13,8 @@ workflows:
 
 jobs:
   test:
+    environment:
+      PYTHONOPTIMIZE: 1
 
     resource_class: co-design-models/r4
     docker:
@@ -37,7 +39,7 @@ jobs:
           echo -n "${Z_REQS_SHA:-not-present}"    > build-stats/jobs/${CIRCLE_JOB}/envs/Z_REQS_SHA
           echo -n "${IMAGE_VCS_SHA:-not-present}" > build-stats/jobs/${CIRCLE_JOB}/envs/IMAGE_VCS_SHA
           echo -n "${IMAGE_NAME:-not-present}"    > build-stats/jobs/${CIRCLE_JOB}/envs/IMAGE_NAME
-
+          echo -n "${PYTHONOPTIMIZE:-not-present}"    > build-stats/jobs/${CIRCLE_JOB}/envs/PYTHONOPTIMIZE
     - store_artifacts:
         path: build-stats
         destination: build-stats
