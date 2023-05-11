@@ -47,6 +47,18 @@ jobs:
         name: run
         # language=bash
         command: |
+          tee .compmake.rc <<END
+            config job_timeout 120
+            config interactive 0
+            config colorize 1
+            config echo_stdout 1
+            config echo_stderr 1
+            config echo 1
+            config status_line_enabled 1
+            config console_status 1
+            config console_status_delta 20
+            config manager_wait 0.005 
+          END
           mcdp-load-libraries -o out  -c "-rparmake n=4" || true 
           compmake out/compmake -c "ls; stats; details failed; why failed"
           comptests-to-junit --fail-if-failed out/compmake --output "out/comptests/junit/junit.xml" --output-txt "out/comptests/junit/summary.txt" --known-failures known_failures.yaml
