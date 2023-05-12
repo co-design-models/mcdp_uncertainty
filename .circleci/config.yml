@@ -2,17 +2,16 @@ version: 2.1
 parameters:
   context_name:
     type: string
-    default: << pipeline.git.branch >>
+    default: "<< pipeline.git.branch >>"
 workflows:
-  version: 2
-  test:
+  test-wf:
     jobs:
-    - test:
-        context: << pipeline.parameters.context_name >>
+    - test-job:
+        context: "<< pipeline.parameters.context_name >>"
 
 
 jobs:
-  test: 
+  test-job: 
 
     resource_class: co-design-models/r4
     docker:
