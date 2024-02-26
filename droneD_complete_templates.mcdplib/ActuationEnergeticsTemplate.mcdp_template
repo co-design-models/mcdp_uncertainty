@@ -1,7 +1,11 @@
+from library . import model BatteryInterface
+from library . import model ActuationInterface
+from library . import model PowerApproxInterface
+
 template [
-  Battery: `BatteryInterface,
-  Actuation: `ActuationInterface,
-  PowerApprox: `PowerApproxInterface
+  Battery: BatteryInterface,
+  Actuation: ActuationInterface,
+  PowerApprox: PowerApproxInterface
 ] mcdp {
   provides endurance     [s]
   provides extra_payload [kg]
