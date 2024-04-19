@@ -6,69 +6,115 @@ parameters:
 workflows:
   test:
     jobs:
-    - test-job:
-        context: "<< pipeline.parameters.context_name >>"
-
+      - test-job:
+          context: "<< pipeline.parameters.context_name >>"
+      - test-job2:
+          context: "<< pipeline.parameters.context_name >>"
 
 jobs:
   test-job:
 
     resource_class: co-design-models/r4
     docker:
-    - image: ${DOCKER_REGISTRY}/${DOCKER_TARGET_ORG}/${DOCKER_REPO_PREFIX}zuper-mcdp-deploy:${Z_DISTRO}
-      auth:
-        username: $DOCKER_USERNAME
-        password: $DOCKER_PASSWORD
+      - image: ${DOCKER_REGISTRY}/${DOCKER_TARGET_ORG}/${DOCKER_REPO_PREFIX}zuper-mcdp-deploy:${Z_DISTRO}
+        auth:
+          username: $DOCKER_USERNAME
+          password: $DOCKER_PASSWORD
     steps:
 
-    - checkout
-    - run:
-        name: Avoid hosts unknown for Github
-        command: |
-          mkdir -p ~/.ssh
-          echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+      - checkout
+      - run:
+          name: Avoid hosts unknown for Github
+          command: |
+            mkdir -p ~/.ssh
+            echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
 
-    - run:
-        name: Python stats
-        command: |
-          python3 -m pip install -U comptests-z7
-          mkdir -p build-stats
-          pipdeptree >  build-stats/pipdeptree.txt
-          python3 -m pip list       | sort | tee  build-stats/pip-list.txt
-          python3 -m pip freeze     | sort | tee  build-stats/pip-freeze.txt
-          python3 -m pip cache list        | tee  build-stats/pip-cache.txt
+      - run:
+          name: Python stats
+          command: |
+            python3 -m pip install -U comptests-z7
+            mkdir -p build-stats
+            pipdeptree >  build-stats/pipdeptree.txt
+            python3 -m pip list       | sort | tee  build-stats/pip-list.txt
+            python3 -m pip freeze     | sort | tee  build-stats/pip-freeze.txt
+            python3 -m pip cache list        | tee  build-stats/pip-cache.txt
+            
+            mkdir -p build-stats/jobs/${CIRCLE_JOB}/envs
+            echo -n "${Z_REQS_SHA:-not-present}"    > build-stats/jobs/${CIRCLE_JOB}/envs/Z_REQS_SHA
+            echo -n "${IMAGE_VCS_SHA:-not-present}" > build-stats/jobs/${CIRCLE_JOB}/envs/IMAGE_VCS_SHA
+            echo -n "${IMAGE_NAME:-not-present}"    > build-stats/jobs/${CIRCLE_JOB}/envs/IMAGE_NAME
+            echo -n "${PYTHONOPTIMIZE:-not-present}"    > build-stats/jobs/${CIRCLE_JOB}/envs/PYTHONOPTIMIZE
+      - store_artifacts:
+          path: build-stats
+          destination: build-stats
 
-          mkdir -p build-stats/jobs/${CIRCLE_JOB}/envs
-          echo -n "${Z_REQS_SHA:-not-present}"    > build-stats/jobs/${CIRCLE_JOB}/envs/Z_REQS_SHA
-          echo -n "${IMAGE_VCS_SHA:-not-present}" > build-stats/jobs/${CIRCLE_JOB}/envs/IMAGE_VCS_SHA
-          echo -n "${IMAGE_NAME:-not-present}"    > build-stats/jobs/${CIRCLE_JOB}/envs/IMAGE_NAME
-          echo -n "${PYTHONOPTIMIZE:-not-present}"    > build-stats/jobs/${CIRCLE_JOB}/envs/PYTHONOPTIMIZE
-    - store_artifacts:
-        path: build-stats
-        destination: build-stats
+      - run:
+          name: run
+          # language=bash
+          command: |
+            tee .compmake.rc \<<END
+              config job_timeout 120
+              config interactive 0
+              config colorize 1
+              config echo_stdout 1
+              config echo_stderr 1
+              config echo 1
+              config status_line_enabled 1
+              config console_status 1
+              config console_status_delta 20
+              config manager_wait 0.005 
+              config multiprocessing_strategy fork
+            END
+            mcdp-load-libraries -o out  -c "-rparmake n=4; -rparmake n=4" || true
+            compmake out/compmake -c "ls; stats; details failed; why failed"
+            comptests-to-junit --fail-if-failed out/compmake --output "out/comptests/junit/junit.xml" --output-txt "out/comptests/junit/summary.txt" --known-failures .circleci/known_failures.yaml
+      - store_test_results:
+          path: out/comptests/junit
+      - store_artifacts:
+          path: out/comptests/junit
+          destination: out-comptests-junit
 
-    - run:
-        name: run
-        # language=bash
-        command: |
-          tee .compmake.rc \<<END
-            config job_timeout 120
-            config interactive 0
-            config colorize 1
-            config echo_stdout 1
-            config echo_stderr 1
-            config echo 1
-            config status_line_enabled 1
-            config console_status 1
-            config console_status_delta 20
-            config manager_wait 0.005 
-            config multiprocessing_strategy fork
-          END
-          mcdp-load-libraries -o out  -c "-rparmake n=4; -rparmake n=4" || true
-          compmake out/compmake -c "ls; stats; details failed; why failed"
-          comptests-to-junit --fail-if-failed out/compmake --output "out/comptests/junit/junit.xml" --output-txt "out/comptests/junit/summary.txt" --known-failures .circleci/known_failures.yaml
-    - store_test_results:
-        path: out/comptests/junit
-    - store_artifacts:
-        path: out/comptests/junit
-        destination: out-comptests-junit
+  test-job2:
+
+    resource_class: co-design-models/r4
+    docker:
+      - image: ${DOCKER_REGISTRY}/${DOCKER_TARGET_ORG}/${DOCKER_REPO_PREFIX}zuper-mcdp-deploy:${Z_DISTRO}
+        auth:
+          username: $DOCKER_USERNAME
+          password: $DOCKER_PASSWORD
+    steps:
+
+      - checkout
+      - run:
+          name: Avoid hosts unknown for Github
+          command: |
+            mkdir -p ~/.ssh
+            echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+
+      - run:
+          name: Python stats
+          command: |
+            python3 -m pip install -U comptests-z7
+            mkdir -p build-stats
+            pipdeptree >  build-stats/pipdeptree.txt
+            python3 -m pip list       | sort | tee  build-stats/pip-list.txt
+            python3 -m pip freeze     | sort | tee  build-stats/pip-freeze.txt
+            python3 -m pip cache list        | tee  build-stats/pip-cache.txt
+            
+            mkdir -p build-stats/jobs/${CIRCLE_JOB}/envs
+            echo -n "${Z_REQS_SHA:-not-present}"    > build-stats/jobs/${CIRCLE_JOB}/envs/Z_REQS_SHA
+            echo -n "${IMAGE_VCS_SHA:-not-present}" > build-stats/jobs/${CIRCLE_JOB}/envs/IMAGE_VCS_SHA
+            echo -n "${IMAGE_NAME:-not-present}"    > build-stats/jobs/${CIRCLE_JOB}/envs/IMAGE_NAME
+            echo -n "${PYTHONOPTIMIZE:-not-present}"    > build-stats/jobs/${CIRCLE_JOB}/envs/PYTHONOPTIMIZE
+      - store_artifacts:
+          path: build-stats
+          destination: build-stats
+
+      - run:
+          name: run
+          environment:
+            Z_SERVICE_CDE: zuper_ide_imp.localcde.local
+            Z_SERVICE_LOADER: zuper_ide_imp.loader
+          # language=bash
+          command: |
+            zuper-ide-imp-mcdp-repo-load-all --source . --no-products
