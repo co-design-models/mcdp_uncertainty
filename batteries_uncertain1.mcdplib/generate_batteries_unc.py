@@ -4,6 +4,7 @@ import string
 from decimal import Decimal
 
 from mcdp_posets import PosetWithMath
+from zuper_commons.text import remove_escapes
 from zuper_commons.types import add_context, check_isinstance, ZValueError
 
 template = """\
@@ -78,7 +79,7 @@ types = {
 from mcdp_lang import parse_constant
 
 
-def enlarge(value_string: str, alpha: Decimal):
+def enlarge(value_string: str, alpha: Decimal) -> tuple[str, str]:
     c = parse_constant(value_string)
     c_unit = check_isinstance(c.unit, PosetWithMath)
     with add_context(c=c):
@@ -95,7 +96,7 @@ def enlarge(value_string: str, alpha: Decimal):
         # if "[]" in value_string:
         #     ls = "%s []" % l
         #     us = "%s []" % u
-        return ls, us
+        return remove_escapes(ls), remove_escapes(us)
 
 
 def go(alpha: Decimal):
