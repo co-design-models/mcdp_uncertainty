@@ -81,15 +81,15 @@ from mcdp_lang import parse_constant
 
 def enlarge(value_string: str, alpha: Decimal) -> tuple[str, str]:
     c = parse_constant(value_string)
-    c_unit = check_isinstance(c.unit, PosetWithMath)
-    c_unit = c_unit.get_ambient_poset()[-1]
+    c_unit = c.unit.amb
+    mi = c_unit.assert_mi()
     with add_context(c=c):
-        _, value, _, _ = c_unit.to_interval2(c.value)
+        _, value, _, _ = mi.to_interval2(c.value)
 
         # value = c_unit.to_interval(c.value)[0]
 
-        l = c_unit.from_number_lower(value * (1 - alpha))
-        u = c_unit.from_number_upper(value * (1 + alpha))
+        l = mi.from_number_lower(value * (1 - alpha))
+        u = mi.from_number_upper(value * (1 + alpha))
 
         ls = c.unit.format(l)
         us = c.unit.format(u)
