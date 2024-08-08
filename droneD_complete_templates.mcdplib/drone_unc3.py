@@ -63,7 +63,7 @@ def solve_stats(ndp: CompositeNamedDP, n: int) -> SolveStatsResults:
     dp0 = ndp.get_dp()
     dpL, dpU = get_dp_bounds(dp0, nl=n, nu=n)
 
-    F = dp0.get_F()
+    F = dp0.F
     F.belongs(f)
 
     logger = None
@@ -72,7 +72,7 @@ def solve_stats(ndp: CompositeNamedDP, n: int) -> SolveStatsResults:
     resL = dpL.solve_f_trace(f=f, tracer=traceL)
     traceU = Tracer(logger=logger)
     resU = dpU.solve_f_trace(f=f, tracer=traceU)
-    R = dp0.get_R()
+    R = dp0.R
     UR = dp0.get_UR()
     print("resultsL: %s" % UR.format(resL))
     print("resultsU: %s" % UR.format(resU))
@@ -97,8 +97,8 @@ def report(data: GoResult) -> Report:
     num_iterations_L = [get_num_iterations(res_i.traceL) for res_i in data.results]
     num_iterations_U = [get_num_iterations(res_i.traceU) for res_i in data.results]
 
-    res_L = np.array([get_only_one(res_i.dpL.get_R(), res_i.resL) for res_i in data.results], dtype=float)
-    res_U = np.array([get_only_one(res_i.dpU.get_R(), res_i.resU) for res_i in data.results], dtype=float)
+    res_L = np.array([get_only_one(res_i.dpL.R, res_i.resL) for res_i in data.results], dtype=float)
+    res_U = np.array([get_only_one(res_i.dpU.R, res_i.resU) for res_i in data.results], dtype=float)
 
     accuracy = res_U - res_L
 
