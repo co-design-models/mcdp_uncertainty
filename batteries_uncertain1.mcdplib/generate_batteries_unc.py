@@ -3,9 +3,8 @@
 import string
 from decimal import Decimal
 
-from mcdp_posets import PosetWithMath
 from zuper_commons.text import remove_escapes
-from zuper_commons.types import add_context, check_isinstance, ZValueError
+from zuper_commons.types import add_context, ZValueError
 
 template = """\
 mcdp {
