@@ -76,7 +76,7 @@ jobs:
 
   test-job2:
 
-    resource_class: ${CIRCLE_PROJECT_USERNAME}/r4
+    resource_class: co-design-models/r4
     docker:
     - image: ${DOCKER_REGISTRY}/${DOCKER_TARGET_ORG}/${DOCKER_REPO_PREFIX}zuper-mcdp-deploy:${Z_DISTRO}
       auth:
