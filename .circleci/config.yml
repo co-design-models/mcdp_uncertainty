@@ -6,8 +6,8 @@ parameters:
 workflows:
   test:
     jobs:
-    - test-job:
-        context: "<< pipeline.parameters.context_name >>"
+#    - test-job:
+#        context: "<< pipeline.parameters.context_name >>"
     - test-job2:
         context: "<< pipeline.parameters.context_name >>"
 
