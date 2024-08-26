@@ -15,7 +15,7 @@ logger = ZLogger(__name__)
 from mcdp_lang import convert_string_query
 from mcdp_dp import get_dp_bounds, Tracer
 from mcdp_ipython_utils import set_axis_colors
-from mcdp_library import Librarian, MCDPLibrary
+from mcdp_library import get_librarian, Librarian, MCDPLibrary
 from mcdp_posets import PosetWithMath, UpperSet
 from plot_utils import ieee_fonts_zoom3, ieee_spines_zoom3
 from quickapp import QuickApp, QuickAppContext
@@ -85,8 +85,7 @@ class DroneUnc2Result:
 
 
 def drone_unc2_go() -> DroneUnc2Result:
-    librarian = Librarian()
-    librarian.find_libraries("../..")
+    librarian = get_librarian(main_dir="../..")
     library = librarian.load_library(LibraryName("droneD_complete_templates"))
     assert isinstance(library, MCDPLibrary), library
     library.use_cache_dir("_cached/drone_unc2")

@@ -9,7 +9,7 @@ from mcdp import OP
 from mcdp_dp import get_dp_bounds, Tracer
 from mcdp_ipython_utils import set_axis_colors
 from mcdp_lang import convert_string_query, MCDPLibraryInterface
-from mcdp_library import Librarian, MCDPLibrary
+from mcdp_library import get_librarian, Librarian, MCDPLibrary
 from mcdp_ndp import CompositeNamedDP, ignore_some
 from mcdp_posets_algebra import ApproximationAlgorithms, ApproximationSettings
 from misc_utils import SolveStatsResults
@@ -36,8 +36,8 @@ class GoResult:
 
 
 def go(algo: ApproximationAlgorithms) -> GoResult:
-    librarian = Librarian()
-    librarian.find_libraries("../..")
+    librarian = get_librarian(main_dir="../..")
+
     library = librarian.load_library(cast(LibraryName, "droneD_complete_templates"))
     assert isinstance(library, MCDPLibrary), type(library)
     library.use_cache_dir("_cached/drone_unc3")

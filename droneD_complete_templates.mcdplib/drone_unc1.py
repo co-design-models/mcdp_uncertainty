@@ -14,7 +14,7 @@ from mcdp_ipython_utils import (
     SolveQueryMultiple,
     to_numpy_array,
 )
-from mcdp_library import Librarian, MCDPLibrary
+from mcdp_library import get_librarian, Librarian, MCDPLibrary
 from mcdp_posets_algebra import frac_linspace
 from plot_utils import ieee_fonts_zoom3, ieee_spines_zoom3
 from quickapp import QuickApp
@@ -50,8 +50,8 @@ class ProcessResult:
 
 
 def drone_unc1_process(s: str) -> ProcessResult:
-    librarian = Librarian()
-    librarian.find_libraries("../..")
+    librarian = get_librarian(main_dir='../..')
+    # librarian.find_libraries("../..")
     library = librarian.load_library(cast(LibraryName, "droneD_complete_templates"))
     assert isinstance(library, MCDPLibrary), library
     library.use_cache_dir("_cached/drone_unc1")
