@@ -1,4 +1,4 @@
-mcdp {
+interface {
     provides velocity [m/s]
     requires power [W]
 }

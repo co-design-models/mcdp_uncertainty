@@ -9,7 +9,7 @@ from mcdp import OP
 from mcdp_dp import get_dp_bounds, Tracer
 from mcdp_ipython_utils import set_axis_colors
 from mcdp_lang import convert_string_query, MCDPLibraryInterface
-from mcdp_library import get_librarian, Librarian, MCDPLibrary
+from mcdp_library import get_librarian, MCDPLibrary
 from mcdp_ndp import CompositeNamedDP, ignore_some
 from mcdp_posets_algebra import ApproximationAlgorithms, ApproximationSettings
 from misc_utils import SolveStatsResults

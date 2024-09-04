@@ -1,5 +1,0 @@
-template mcdp {
-    provides power [W]
-    requires power [W]
-
-}

@@ -1,10 +1,10 @@
-template mcdp {
+interface {
     provides capacity [J]
     provides missions [dimensionless]
 
     requires mass     [g]
     requires cost     [$]
-    
-    # Number of replacements
-    requires maintenance [dimensionless]
+
+    requires maintenance [dimensionless] 'number of replacements'
+
 }

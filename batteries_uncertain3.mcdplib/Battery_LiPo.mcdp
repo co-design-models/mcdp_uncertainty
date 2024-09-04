@@ -26,4 +26,3 @@ mcdp {
     required cost >= costc
     required mass >= massc
 }
-

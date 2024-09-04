@@ -14,7 +14,7 @@ from mcdp_ipython_utils import (
     SolveQueryMultiple,
     to_numpy_array,
 )
-from mcdp_library import get_librarian, Librarian, MCDPLibrary
+from mcdp_library import get_librarian, MCDPLibrary
 from mcdp_posets_algebra import frac_linspace
 from plot_utils import ieee_fonts_zoom3, ieee_spines_zoom3
 from quickapp import QuickApp

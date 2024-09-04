@@ -4,25 +4,24 @@ from typing import Optional, TypeVar
 
 import numpy as np
 
+from mcdp_dp import get_dp_bounds, Tracer
+from mcdp_ipython_utils import set_axis_colors
+from mcdp_lang import convert_string_query
+from mcdp_library import get_librarian, MCDPLibrary
 from mcdp_ndp import CompositeNamedDP
+from mcdp_posets import PosetWithMath, UpperSet
+from misc_utils import SolveStatsResults
+from plot_utils import ieee_fonts_zoom3, ieee_spines_zoom3
+from quickapp import QuickApp, QuickAppContext
+from reprep import Report
 from zuper_commons.fs import make_sure_dir_exists
 from zuper_commons.logs import ZLogger
 from zuper_commons.text import LibraryName
+from zuper_commons.types import add_context, ZValueError
 from zuper_params import DecentParams
 from zuper_utils_asyncio import SyncTaskInterface
 
 logger = ZLogger(__name__)
-from mcdp_lang import convert_string_query
-from mcdp_dp import get_dp_bounds, Tracer
-from mcdp_ipython_utils import set_axis_colors
-from mcdp_library import get_librarian, Librarian, MCDPLibrary
-from mcdp_posets import PosetWithMath, UpperSet
-from plot_utils import ieee_fonts_zoom3, ieee_spines_zoom3
-from quickapp import QuickApp, QuickAppContext
-from reprep import Report
-from zuper_commons.types import add_context, ZValueError
-
-from misc_utils import SolveStatsResults
 
 
 #

@@ -1,6 +1,5 @@
-from library . import model BatteryInterface
-from library . import model ActuationInterface
-from library . import model PowerApproxInterface
+from library . import interface BatteryInterface, ActuationInterface, PowerApproxInterface
+
 
 template [
   Battery: BatteryInterface,

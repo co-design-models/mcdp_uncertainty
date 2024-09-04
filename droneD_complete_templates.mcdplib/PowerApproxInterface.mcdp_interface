@@ -1,0 +1,5 @@
+interface {
+    provides power [W]
+    requires power [W] 
+
+}

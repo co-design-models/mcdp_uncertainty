@@ -1,6 +1,6 @@
 from shelf "github.com/co-design-models/uav_energetics" import library droneD_complete_v2
 
-flatten mcdp { 
+flatten mcdp {
     provides travel_distance [km]
     provides num_missions [dimensionless]
     provides carry_payload [g]
@@ -17,9 +17,10 @@ flatten mcdp {
     extra_payload provided by actuation_energetics ≥ provided carry_payload
     distance provided by strategy ≥ provided travel_distance
 
-    perception = instance template mcdp {
+    perception = instance  mcdp {
         provides velocity [m/s]
         requires power [W]
+        ignore unconnected
     }
     velocity required by strategy ≤ velocity provided by perception
     extra_power provided by actuation_energetics ≥ power required by perception

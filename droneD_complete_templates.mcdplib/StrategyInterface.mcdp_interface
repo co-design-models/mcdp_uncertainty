@@ -1,5 +1,7 @@
-template mcdp {
+mcdp {
     provides distance [km]
     requires endurance [s]
     requires velocity [m/s]
+
+    ignore unconnected
 }
