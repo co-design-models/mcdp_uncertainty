@@ -1,7 +1,6 @@
-mcdp {
+interface {
     provides distance [km]
     requires endurance [s]
     requires velocity [m/s]
 
-    ignore unconnected
 }
