@@ -4,7 +4,7 @@ template [
     Battery: `BatteryInterface,
     Actuation: `ActuationInterface,
     Perception: `PerceptionInterface,
-    PowerApprox: `PowerApprox]
+    PowerApprox: `PowerApproxInterface]
 mcdp {
   provides travel_distance [km]
   provides num_missions [dimensionless]
