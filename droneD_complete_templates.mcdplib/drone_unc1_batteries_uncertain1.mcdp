@@ -1,4 +1,4 @@
-from repo "github.com/co-design-models/uav_energetics" import library droneD_complete_v2
+from repo "github.com/co-design-models/uav_energetics@z7-stage" import library droneD_complete_v2
 specialize [
   Battery: `batteries_uncertain1.batteries,
   Actuation: `droneD_complete_v2.Actuation,
