@@ -44,8 +44,8 @@ def get_ndp_code(interval_mw: float):
     s = (
         # language=mcdp
         """\
-from shelf "github.com/co-design-models/uav_energetics" import library droneD_complete_v2
-from shelf "github.com/co-design-models/uav_energetics" import library batteries_nodisc
+from repo "github.com/co-design-models/uav_energetics" import library droneD_complete_v2
+from repo "github.com/co-design-models/uav_energetics" import library batteries_nodisc
  
 ignore_resources(total_cost) specialize [
   Battery: `batteries_nodisc.batteries,
