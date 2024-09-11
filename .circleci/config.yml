@@ -117,4 +117,4 @@ jobs:
           Z_SERVICE_LOADER: zuper_ide_imp.loader
         # language=bash
         command: |
-          zuper-ide-imp-mcdp-repo-load-all --source . 
+          zuper-ide-imp-mcdp-repo-load-all --source . --no-products 
