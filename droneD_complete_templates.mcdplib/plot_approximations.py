@@ -1,8 +1,8 @@
 import numpy as np
 from matplotlib import pylab as pylab0
 
-from mcdp_dp import get_dp_bounds, M_Fun_AddMany_DP, M_Fun_MultiplyMany_DP, PrimitiveDPAny
-from mcdp_posets import get_math_bundle, make_poset_product2
+from mcdp_dp import get_dp_bounds, M_Fun_AddMany_DP, M_Fun_MultiplyMany_DP, DPI_Any
+from mcdp_posets import get_math_bundle
 from mcdp_posets_algebra import ApproximationAlgorithms
 from mcdp_report import get_best_plotter
 from plot_utils import ieee_fonts_zoom3, ieee_spines_zoom3
@@ -27,7 +27,7 @@ def plot_nominal_invplus(plt):
     axes.yaxis.set_ticklabels([])
 
 
-def go1(r: Report, ns: list[int], dp: PrimitiveDPAny, plot_nominal, axis):
+def go1(r: Report, ns: list[int], dp: DPI_Any, plot_nominal, axis):
     f = r.figure(cols=len(ns))
 
     for n in ns:
@@ -36,7 +36,7 @@ def go1(r: Report, ns: list[int], dp: PrimitiveDPAny, plot_nominal, axis):
         f0 = 1
 
         UR = dp.get_UR()
-        space = make_poset_product2(UR, UR)
+        space = UR % UR
 
         urL = dpL.solve_friendly(f=f0)
         urU = dpU.solve_friendly(f=f0)

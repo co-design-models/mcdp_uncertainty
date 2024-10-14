@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Mapping
 
-from mcdp_dp import PrimitiveDPFRIB, Tracer
+from mcdp_dp import DPI_FRIB, Tracer
 from mcdp_ndp import CompositeNamedDP
 from mcdp_posets import UpperSet
 
@@ -15,13 +15,13 @@ class SolveStatsResults[FT, RT, IT, BT]:
     n: int
     query: Mapping[str, str]
     ndp: CompositeNamedDP[FT, RT, IT, BT]
-    dpL: PrimitiveDPFRIB[
+    dpL: DPI_FRIB[
         FT,
         RT,
         IT,
         BT,
     ]
-    dpU: PrimitiveDPFRIB[
+    dpU: DPI_FRIB[
         FT,
         RT,
         IT,
