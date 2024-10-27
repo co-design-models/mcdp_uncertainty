@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from dataclasses import dataclass
-from typing import Optional, TypeVar
+from typing import Optional
 
 import numpy as np
 
@@ -9,7 +9,7 @@ from mcdp_ipython_utils import set_axis_colors
 from mcdp_lang import convert_string_query
 from mcdp_library import get_librarian, MCDPLibrary
 from mcdp_ndp import CompositeNamedDP
-from mcdp_posets import PosetWithMath, UpperSet
+from mcdp_posets import P_Math, UpperSet
 from misc_utils import SolveStatsResults
 from plot_utils import ieee_fonts_zoom3, ieee_spines_zoom3
 from quickapp import QuickApp, QuickAppContext
@@ -145,10 +145,7 @@ def solve_stats(ndp: CompositeNamedDP, n: int) -> SolveStatsResults:
     )
 
 
-X = TypeVar("X")
-
-
-def get_only_one(P: PosetWithMath[X], w: UpperSet[X]) -> Optional[X]:
+def get_only_one[X](P: P_Math[X], w: UpperSet[X]) -> Optional[X]:
     if not w.minimals:
         return None
     el = list(w.minimals)[0]
