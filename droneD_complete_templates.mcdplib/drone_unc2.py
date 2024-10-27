@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from dataclasses import dataclass
-from typing import Optional
 
 import numpy as np
 
@@ -145,7 +144,7 @@ def solve_stats(ndp: CompositeNamedDP, n: int) -> SolveStatsResults:
     )
 
 
-def get_only_one[X](P: P_Math[X], w: UpperSet[X]) -> Optional[X]:
+def get_only_one[X](P: P_Math[X], w: UpperSet[X]) -> X | None:
     if not w.minimals:
         return None
     el = list(w.minimals)[0]
