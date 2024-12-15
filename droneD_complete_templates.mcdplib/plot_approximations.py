@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import pylab as pylab0
 
-from mcdp_dp import get_dp_bounds, M_Fun_AddMany_DP, M_Fun_MultiplyMany_DP, DPI_Any
+from mcdp_dp import DPI_Any, M_Fun_AddMany_DP, M_Fun_MultiplyMany_DP
 from mcdp_posets import get_math_bundle
 from mcdp_posets_algebra import ApproximationAlgorithms
 from mcdp_report import get_best_plotter
@@ -31,15 +31,19 @@ def go1(r: Report, ns: list[int], dp: DPI_Any, plot_nominal, axis):
     f = r.figure(cols=len(ns))
 
     for n in ns:
-        dpL, dpU = get_dp_bounds(dp, n, n)
+        # dpL, dpU = get_dp_bounds(dp, n, n)
 
         f0 = 1
 
         UR = dp.get_UR()
         space = UR % UR
 
-        urL = dpL.solve_friendly(f=f0)
-        urU = dpU.solve_friendly(f=f0)
+        solve_f = dp.get_solve_f_map()
+        solve_f_opt = solve_f.get_optimistic_chain_el(n)
+        solve_f_pes = solve_f.get_pessimistic_chain_el(n)
+
+        urL = solve_f_opt.u1map_call(f0)
+        urU = solve_f_pes.u1map_call(f0)
         value = urL, urU
 
         plotter = get_best_plotter(space)
@@ -66,7 +70,7 @@ def go() -> None:
             mb = get_math_bundle()
             F = opspace = mb.get_non_neg_reals()
             R = F
-            dp = M_Fun_MultiplyMany_DP(F=F, opspace=opspace, Rs=(R, R), algo=algo)
+            dp = M_Fun_MultiplyMany_DP(Rs=(R, R), algo=algo)
             ns = [3, 4, 5, 6, 10, 15]
 
             axis = (0.0, 6.0, 0.0, 6.0)

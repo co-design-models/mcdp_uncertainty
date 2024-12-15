@@ -6,7 +6,7 @@ import numpy as np
 
 from drone_unc2 import get_only_one
 from mcdp import OP
-from mcdp_dp import get_dp_bounds, Tracer
+from mcdp_dp import Tracer
 from mcdp_ipython_utils import set_axis_colors
 from mcdp_lang import convert_string_query, MCDPLibraryInterface
 from mcdp_library import get_librarian, MCDPLibrary
